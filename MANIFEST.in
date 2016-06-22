@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include teesta *.css
+recursive-include teesta *.csv
+recursive-include teesta *.html
+recursive-include teesta *.ico
+recursive-include teesta *.js
+recursive-include teesta *.json
+recursive-include teesta *.md
+recursive-include teesta *.png
+recursive-include teesta *.py
+recursive-include teesta *.svg
+recursive-include teesta *.txt
+recursive-exclude teesta *.pyc
