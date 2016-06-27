@@ -1,0 +1,39 @@
+{
+	"request_header": {
+		"email": {
+			"reqd": 1,
+			"fieldtype": "basestring"
+		},
+		"first_name": {
+			"reqd": 1,
+			"fieldtype": "basestring"
+		},
+		"middle_name": {
+			"fieldtype": "basestring"
+		},
+		"last_name": {
+			"fieldtype": "basestring"
+		},
+		"user_type": {
+			"fieldtype": "basestring",
+			"default": "Website User",
+			"options": ["Website User", "System User"]
+		},
+		"language": {
+			"fieldtype": "basestring",
+			"default": "english"
+		},
+		"enabled": {
+			"fieldtype": "int"
+		},
+		"name": {
+			"fieldtype": "basestring"
+		},
+		"gender": {
+			"fieldtype": "basestring"
+		},
+		"birth_date": {
+			"fieldtype": "basestring"
+		}
+	}
+}
