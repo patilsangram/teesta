@@ -23,10 +23,6 @@
 			"fieldtype": "basestring",
 			"default": "english"
 		},
-		"enabled": {
-			"fieldtype": "int",
-			"default": 1
-		},
 		"name": {
 			"fieldtype": "basestring"
 		},
