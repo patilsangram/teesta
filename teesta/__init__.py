@@ -5,6 +5,7 @@ import time
 import json
 import frappe
 import api_handler
+from frappe import _
 from frappe.utils import cstr, cint
 from api_handler.response import report_error
 
@@ -20,6 +21,7 @@ def login(data):
 			frappe.local.login_manager.post_login()
 			frappe.response["sid"] = frappe.session.sid
 			frappe.response["message"] = "Logged In"
+			frappe.response["greet"] = _("Good Morning", "hi")
 		else:
 			raise api_handler.InvalidDataError("Invalid Input")
 	except frappe.AuthenticationError,e:
@@ -28,3 +30,19 @@ def login(data):
 	finally:
 		ts = int(time.time())
 		frappe.response["timestamp"] = ts
+
+def make_translation_property(args, ignore_validate=False, validate_fields_for_doctype=True):
+	"""Create a new **Property Setter** (for overriding DocType and DocField properties)."""
+	args = frappe._dict(args)
+	tp = frappe.get_doc({
+		'doctype': "Translation Property",
+		'doctype_or_field': args.doctype_or_field or "DocField",
+		'doc_type': args.doctype,
+		'field_name': args.fieldname,
+		'property': args.property,
+		'value': args.value,
+		'property_type': args.property_type or "Data",
+		'__islocal': 1
+	})
+	tp.flags.ignore_validate = ignore_validate
+	tp.insert()
