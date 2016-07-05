@@ -8,6 +8,7 @@ from frappe import _
 from frappe.utils import cint
 from frappe.model.document import Document
 from teesta.translate import make_translation_property, make_user_translation_for_select_field
+from teesta.translate import enable_disable_user_translation
 
 doctype_properties = {
 	'enable_user_translation': 'Check'
@@ -70,7 +71,11 @@ class CustomizeTranslation(Document):
 			return
 
 		frappe.db.sql("""delete from `tabTranslation Property` where doc_type=%s""", self.doc_type)
+		# disable all the transaction for the doctype it will be enabled field wise latter
+		enable_disable_user_translation(doctype=self.doc_type)
+
 		self.set_translation_properties()
+
 		frappe.msgprint(_("{0} updated").format(_(self.doc_type)))
 		self.fetch_to_customize()
 
@@ -90,7 +95,7 @@ class CustomizeTranslation(Document):
 			self.make_property(property=property, value=self.get(property),
 				property_type=doctype_properties[property])
 
-		for field in self.fields:
+		for field in translation_fields:
 			properties = filter(lambda property: property in allowed_property, docfield_properties.keys())
 			for property in properties:
 				self.make_property(property=property, value=field.get(property),
@@ -98,6 +103,9 @@ class CustomizeTranslation(Document):
 
 			if field.fieldtype in ["Select"] and field.translate:
 				make_user_translation_for_select_field(self.doc_type, field.fieldname, field.options)
+
+		fieldnames = [field.fieldname for field in translation_fields]
+		enable_disable_user_translation(doctype=self.doc_type, field=fieldnames, is_enabled=1)
 
 	def make_property(self, property, value, property_type, fieldname=None):
 		if not self.is_valid_value(value, property_type):
@@ -127,4 +135,5 @@ class CustomizeTranslation(Document):
 			return
 
 		frappe.db.sql("""delete from `tabTranslation Property` where doc_type=%s""", self.doc_type)
+		enable_disable_user_translation(doctype=self.doc_type)
 		self.fetch_to_customize()

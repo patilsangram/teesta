@@ -28,6 +28,7 @@ def make_user_translation_for_select_field(doctype, field, options):
 					}, "name")
 
 	if translations:
+		enable_disable_user_translation(doctype=doctype, field=field, is_enabled=1)
 		return
 
 	languages = frappe.db.get_values("Language", {"is_active":1}, "language_code")
@@ -57,3 +58,39 @@ def make_user_translation(doctype=None, docname="All", field=None, source=None, 
 		lt.target_name = source
 
 	translation.insert(ignore_permissions=True)
+
+def enable_disable_user_translation(doctype=None, docname=None, field=None, lang=None, is_enabled=0):
+	def is_multiple(items):
+		op = "="
+		val = "'%s'"%(items)
+		if isinstance(items, list):
+			op = " in "
+			val = "(%s)"%(",".join(["'%s'"%(item) for item in items]))
+
+		return {
+			"op": op,
+			"val": val
+		}
+
+	def build_conditions():
+		condition = ""
+		if doctype:
+			condition += " and ut.ref_doctype{op}{val}".format(**is_multiple(doctype))
+		if docname:
+			condition += " and ut.ref_docname{op}{val}".format(**is_multiple(docname))
+		if field:
+			condition += " and ut.field{op}{val}".format(**is_multiple(field))
+		if lang:
+			condition += " and lt.language{op}{val}".format(**is_multiple(lang))
+		return condition
+
+	if not any([doctype, docname, field, lang]):
+		frappe.throw("Can't disable translation, Invalid Input !!")
+
+	if not lang:
+		languages = frappe.db.get_values("Language", {"is_active":1}, "language_code")
+		lang = [language[0] for language in languages]
+
+	update_query = """update `tabLanguage Translation` lt inner join `tabUser Translation` ut on
+						lt.parent=ut.name %s set is_enabled=%s"""%(build_conditions(), is_enabled)
+	frappe.db.sql(update_query, auto_commit=True)
