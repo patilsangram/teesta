@@ -88,7 +88,7 @@ frappe.customize_translation.set_primary_action = function(frm) {
 				method: "save_customization",
 				callback: function(r) {
 					if(!r.exc) {
-						// frappe.customize_translation.clear_locals_and_refresh(frm);
+						frm.refresh();
 					}
 				}
 			});
@@ -121,12 +121,4 @@ frappe.customize_translation.confirm = function(msg, frm) {
 
 	frappe.customize_translation.confirm.dialog = d;
 	d.show();
-}
-
-frappe.customize_translation.clear_locals_and_refresh = function(frm) {
-	// clear doctype from locals
-	frappe.model.clear_doc("DocType", frm.doc.doc_type);
-	delete frappe.meta.docfield_copy[frm.doc.doc_type];
-
-	frm.refresh();
 }
