@@ -99,15 +99,16 @@ class CustomizeTranslation(Document):
 			properties = filter(lambda property: property in allowed_property, docfield_properties.keys())
 			for property in properties:
 				self.make_property(property=property, value=field.get(property),
-					property_type=docfield_properties[property], fieldname=field.fieldname)
+					property_type=docfield_properties[property], fieldname=field.fieldname,
+					fieldtype=field.fieldtype)
 
 			if field.fieldtype in ["Select"] and field.translate:
 				make_user_translation_for_select_field(self.doc_type, field.fieldname, field.options)
 
 		fieldnames = [field.fieldname for field in translation_fields]
-		enable_disable_user_translation(doctype=self.doc_type, field=fieldnames, is_enabled=1)
+		enable_disable_user_translation(doctype=self.doc_type, field=fieldnames, value=1)
 
-	def make_property(self, property, value, property_type, fieldname=None):
+	def make_property(self, property, value, property_type, fieldname=None, fieldtype="Data"):
 		if not self.is_valid_value(value, property_type):
 			return
 
@@ -116,6 +117,7 @@ class CustomizeTranslation(Document):
 			"doctype": self.doc_type,
 			"doctype_or_field": "DocField" if fieldname else "DocType",
 			"fieldname": fieldname,
+			"fieldtype": fieldtype,
 			"property": property,
 			"value": value,
 			"property_type": property_type
