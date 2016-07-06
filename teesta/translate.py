@@ -8,6 +8,7 @@ def make_translation_property(args, ignore_validate=False, validate_fields_for_d
 		'doctype_or_field': args.doctype_or_field or "DocField",
 		'doc_type': args.doctype,
 		'field_name': args.fieldname,
+		'field_type': args.fieldtype,
 		'property': args.property,
 		'value': args.value,
 		'property_type': args.property_type or "Data",
@@ -23,7 +24,6 @@ def make_user_translation_for_select_field(doctype, field, options):
 	# check if user translation is already created
 	translations = frappe.db.get_values("User Translation", {
 						"ref_doctype":doctype,
-						"ref_docname": "All",
 						"field": field
 					}, "name")
 
@@ -34,17 +34,20 @@ def make_user_translation_for_select_field(doctype, field, options):
 	languages = frappe.db.get_values("Language", {"is_active":1}, "language_code")
 	languages = [lang[0] for lang in languages]
 
-	sources = options.split("\n")
+	sources = [opt for opt in options.split("\n") if opt]
 	for source in sources:
 		make_user_translation(doctype=doctype, field=field, source=source, languages=languages)
 
-def make_user_translation(doctype=None, docname="All", field=None, source=None, languages=[]):
+def make_user_translation(doctype=None, field=None, source=None, languages=[]):
 	if not all([doctype, field, source]):
+		return
+
+	# check if translation doc is already created for source
+	if frappe.db.get_value("User Translation", { "source_name": source }):
 		return
 
 	translation = frappe.new_doc("User Translation")
 	translation.field = field
-	translation.ref_docname = docname
 	translation.ref_doctype = doctype
 	translation.source_name = source
 
@@ -55,11 +58,11 @@ def make_user_translation(doctype=None, docname="All", field=None, source=None, 
 		lt = translation.append("translations", {})
 		lt.is_enabled = 1
 		lt.language = language
-		lt.target_name = source
+		lt.target_name = ''
 
 	translation.insert(ignore_permissions=True)
 
-def enable_disable_user_translation(doctype=None, docname=None, field=None, lang=None, is_enabled=0):
+def enable_disable_user_translation(doctype=None, field=None, lang=None, is_enabled=0):
 	def is_multiple(items):
 		op = "="
 		val = "'%s'"%(items)
@@ -76,15 +79,13 @@ def enable_disable_user_translation(doctype=None, docname=None, field=None, lang
 		condition = ""
 		if doctype:
 			condition += " and ut.ref_doctype{op}{val}".format(**is_multiple(doctype))
-		if docname:
-			condition += " and ut.ref_docname{op}{val}".format(**is_multiple(docname))
 		if field:
 			condition += " and ut.field{op}{val}".format(**is_multiple(field))
 		if lang:
 			condition += " and lt.language{op}{val}".format(**is_multiple(lang))
 		return condition
 
-	if not any([doctype, docname, field, lang]):
+	if not any([doctype, field, lang]):
 		frappe.throw("Can't disable translation, Invalid Input !!")
 
 	if not lang:
@@ -94,3 +95,33 @@ def enable_disable_user_translation(doctype=None, docname=None, field=None, lang
 	update_query = """update `tabLanguage Translation` lt inner join `tabUser Translation` ut on
 						lt.parent=ut.name %s set is_enabled=%s"""%(build_conditions(), is_enabled)
 	frappe.db.sql(update_query, auto_commit=True)
+
+def get_translation_enable_doctypes():
+	""" get all the translation enabled DocType """
+	filters = {
+		"doctype_or_field": "DocType",
+		"property": "enable_user_translation",
+		"value": "1"
+	}
+	doc_types = frappe.db.get_values("Translation Property", filters, "doc_type")
+	doc_types = [doctype[0] for doctype in doc_types]
+	return doc_types or []
+
+def get_translation_enable_fields(doctype=None, ignore_select=False):
+	""" get all translation enabled DocFields """
+	doctypes = get_translation_enable_doctypes() if not doctype else [doctype]
+
+	filters = {
+		"doctype_or_field": "DocField",
+		"property": "translate",
+		"doc_type": ["in", doctypes],
+		"value": "1",
+	}
+
+	if ignore_select:
+		filters.update({ "field_type": ["!=", "Select"] })
+
+	fields = frappe.db.get_values("Translation Property", filters, "field_name")
+	fields = [field[0] for field in fields]
+
+	return fields or []
