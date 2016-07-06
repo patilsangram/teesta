@@ -14,7 +14,7 @@ class Language(Document):
 	def validate(self):
 		""" disable/enable all the translation if Is Activated = 0 or 1 """
 		if not self.is_active:
-			enable_disable_user_translation(lang=self.language_code, is_enabled=self.is_active)
+			enable_disable_user_translation(lang=self.language_code, value=self.is_active)
 		else:
 			# get all the translation enabled DocType
 			doc_types = get_translation_enable_doctypes()
@@ -24,4 +24,4 @@ class Language(Document):
 
 			fields = get_translation_enable_fields()
 			enable_disable_user_translation(doctype=doc_types, field=fields, lang=self.language_code,
-				is_enabled=self.is_active)
+				value=self.is_active)

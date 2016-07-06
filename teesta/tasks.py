@@ -24,20 +24,20 @@ def make_user_translations():
 			filters = { "modified":[">", max_date] }
 
 		dates = []
-		fields.append("modified")
+		fields.extend(["name", "modified"])
 		
 		docs = frappe.get_all(doctype, filters=filters, fields=fields)
 		if not docs:
 			continue
 		
-		for field in fields:
-			if field == "modified":
-				dates = list(set([get_datetime(doc.get(field)) for doc in docs if doc.get(field, None)]))
-			else:
-				sources = list(set([doc.get(field) for doc in docs if doc.get(field, None)]))
+		for doc in docs:
+			docname = doc.pop("name")
+			dates.append(get_datetime(doc.pop("modified")))
 
-			for source in sources:
-				make_user_translation(doctype=doctype, field=field, source=source)
+			for field in fields:
+				if field in ["name", "modified"]:
+					continue
+				make_user_translation(doctype=doctype, docname=docname, field=field, source=doc.get(field))
 
 		max_date = max(dates)
 		set_global_default(key, max_date)
