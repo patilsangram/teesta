@@ -12,7 +12,7 @@ frappe.ui.form.on('Customize Translation', {
 					['DocType', 'custom', '=', 0],
 					['DocType', 'name', 'not in', 'DocType, DocField, DocPerm, User, Role, UserRole, \
 						 Page, Page Role, Module Def, Print Format, Report, Customize Form, \
-						 Customize Form Field', 'Customize Translation', 'Customize Translation Field']
+						 Customize Form Field, Customize Translation, Customize Translation Field']
 				]
 			};
 		});
